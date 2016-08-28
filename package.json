@@ -1,0 +1,21 @@
+{
+  "name": "allex_leveldbwithlogservice",
+  "version": "0.1.0",
+  "description": "LevelDBWithLogService",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url" : "git@gitlab.hers.rs:allex_services/leveldbwithlog"
+  },
+  "keywords": [
+    "ecosystem:allex",
+    "Service",
+    "LevelDBWithLog"
+  ],
+  "author": "HERS Belgrade",
+  "license": "ISC"
+}
+
