@@ -11,7 +11,7 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
   function factoryCreator(parentFactory) {
     return {
       'service': require('./users/serviceusercreator')(execlib, parentFactory.get('service')),
-      'user': require('./users/usercreator')(execlib, parentFactory.get('user')) 
+      'user': require('./users/usercreator')(execlib, parentFactory.get('user'), leveldblib) 
     };
   }
 
@@ -34,12 +34,13 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
 
   function LevelDBWithLogService(prophash) {
     ParentService.call(this, prophash);
+    this.dbdirpath = prophash.path;
     this.kvstorageopts = prophash.kvstorage;
     this.logopts = prophash.log;
     this.kvstorage = null;
     this.log = null;
     this.locks = new qlib.JobCollection();
-    this.startDBs(prophash.path);
+    this.startDBs();
   }
   
   ParentService.inherit(LevelDBWithLogService, factoryCreator);
@@ -58,6 +59,7 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
     this.log = null;
     this.kvstorage = null;
     this.kvstoragename = null;
+    this.dbdirpath = null;
     ParentService.prototype.__cleanUp.call(this);
   };
   
@@ -65,13 +67,9 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
     return false;
   };
 
-  LevelDBWithLogService.prototype.startDBs = function (path, error) {
-    if (error) {
-      this.close();
-      return;
-    }
-    q.allSettled(this.createStartDBPromises(path)).then(
-      this.onDBsReady.bind(this, path)
+  LevelDBWithLogService.prototype.startDBs = function () {
+    q.allSettled(this.createStartDBPromises()).then(
+      this.onDBsReady.bind(this)
     ).fail(
       this.close.bind(this)
     );
@@ -81,19 +79,32 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
     this.readyToAcceptUsersDefer.resolve(true);
   };
 
-  LevelDBWithLogService.prototype.createStartDBPromises = function (path) {
+  LevelDBWithLogService.prototype.createStartDBPromises = function () {
     var kvsd = q.defer(),
-      kvso = leveldboptshash2obj(this.kvstorageopts, path),
+      kvso = leveldboptshash2obj(this.kvstorageopts, this.dbdirpath),
       ld = q.defer(),
-      lo = leveldboptshash2obj(this.logopts, path);
+      lo = this.logCreateObj(),
+      rd = q.defer();
 
     kvso.starteddefer = kvsd;
     lo.starteddefer = ld;
-    lo.startfromone = true;
 
     this.kvstorage = leveldblib.createDBHandler(kvso);
     this.log = new (leveldblib.DBArray)(lo);
+    this.resets = leveldblib.createDBHandler({
+      dbname: Path.join(this.dbdirpath, 'resets.db'),
+      dbcreationoptions: {
+        valueEncoding: bufferlib.makeCodec(['String', 'UInt64LE', 'UInt64LE', 'UInt32LE'], 'resets')
+        //username, minmoment, maxmoment, txncount
+      }
+    });
     return [kvsd.promise, ld.promise];
+  };
+
+  LevelDBWithLogService.prototype.logCreateObj = function () {
+    var lo = leveldboptshash2obj(this.logopts, this.dbdirpath);
+    lo.startfromone = true;
+    return lo;
   };
 
   LevelDBWithLogService.prototype.get = function (key) {
@@ -110,6 +121,10 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
 
   LevelDBWithLogService.prototype.del = function (key) {
     return this.kvstorage.del(key);
+  };
+
+  LevelDBWithLogService.prototype.recordReset = function (resetid, username, minmoment, maxmoment, txncount) {
+    return this.resets.put(resetid, [username, minmoment, maxmoment, txncount]);
   };
 
   LevelDBWithLogService.prototype.propertyHashDescriptor = {
