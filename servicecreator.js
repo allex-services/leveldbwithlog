@@ -16,10 +16,14 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
   }
 
   function encodingFor(dbcreationoptions, path) {
+    if (!dbcreationoptions) {
+      return 'json';
+    }
     if (dbcreationoptions.bufferValueEncoding &&
         lib.isArray(dbcreationoptions.bufferValueEncoding)) {
       return bufferlib.makeCodec(dbcreationoptions.bufferValueEncoding, path)
     }
+    return dbcreationoptions.valueEncoding;
   }
 
   function leveldboptshash2obj (leveldboptshash, path) {
@@ -35,8 +39,10 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
   function LevelDBWithLogService(prophash) {
     ParentService.call(this, prophash);
     this.dbdirpath = prophash.path;
-    this.kvstorageopts = prophash.kvstorage;
-    this.logopts = prophash.log;
+    this.kvstorageopts = prophash.kvstorage || {};
+    this.kvstorageopts.dbname = this.kvstorageopts.dbname || 'kvstorage.db';
+    this.logopts = prophash.log || {};
+    this.logopts.dbname = this.logopts.dbname || 'log.db';
     this.kvstorage = null;
     this.log = null;
     this.locks = new qlib.JobCollection();
@@ -105,6 +111,11 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
     var lo = leveldboptshash2obj(this.logopts, this.dbdirpath);
     lo.startfromone = true;
     return lo;
+  };
+
+  LevelDBWithLogService.prototype.put = function (key,value) {
+    return this.kvstorage.put(key,value);
+    //TODO work with log....
   };
 
   LevelDBWithLogService.prototype.get = function (key) {

@@ -44,6 +44,26 @@ function createUser(execlib, ParentUser, leveldblib) {
     ParentUser.prototype.__cleanUp.call(this);
   };
 
+  User.prototype.put = function(key,value,defer){
+    qlib.promise2defer(this.__service.put(key,value),defer);
+  }
+
+  User.prototype.get = function(key,defer){
+    qlib.promise2defer(this.__service.get(key),defer);
+  }
+
+  User.prototype.safeGet = function(key,deflt,defer){
+    qlib.promise2defer(this.__service.safeGet(key,deflt), defer);
+  }
+
+  User.prototype.getWDefault = function(key,deflt,defer){
+    qlib.promise2defer(this.__service.getWDefault(key,deflt), defer);
+  }
+
+  User.prototype.del = function(key,defer){
+    qlib.promise2defer(this.__service.del(key), defer);
+  }
+
   User.prototype.traverseResets = function (options, defer) {
     this.streamLevelDB(this.__service.resets, options, defer);
   };
