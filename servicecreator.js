@@ -127,7 +127,7 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
   };
 
   LevelDBWithLogService.prototype.getWDefault = function (key, deflt) {
-    return this.kvstorage.getWDefault(username, deflt);
+    return this.kvstorage.getWDefault(key, deflt);
   };
 
   LevelDBWithLogService.prototype.del = function (key) {
