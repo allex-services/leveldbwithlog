@@ -24,6 +24,9 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
       return bufferlib.makeCodec(dbcreationoptions.bufferValueEncoding, path)
     }
     if (dbcreationoptions.leveldbValueEncoding) {
+      if (!leveldblib[dbcreationoptions.leveldbValueEncoding]) {
+        throw new lib.Error('LEVELDB_ENCODING_NOT_RECOGNIZED', dbcreationoptions.leveldbValueEncoding);
+      }
       return leveldblib[dbcreationoptions.leveldbValueEncoding];
     }
     return dbcreationoptions.valueEncoding;
