@@ -23,6 +23,9 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
         lib.isArray(dbcreationoptions.bufferValueEncoding)) {
       return bufferlib.makeCodec(dbcreationoptions.bufferValueEncoding, path)
     }
+    if (dbcreationoptions.leveldbValueEncoding) {
+      return leveldblib[dbcreationoptions.leveldbValueEncoding];
+    }
     return dbcreationoptions.valueEncoding;
   }
 
