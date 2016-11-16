@@ -15,6 +15,7 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
     };
   }
 
+  /*
   function encodingFor(dbcreationoptions, path) {
     if (!dbcreationoptions) {
       return 'json';
@@ -31,13 +32,17 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
     }
     return dbcreationoptions.valueEncoding;
   }
+  */
 
   function leveldboptshash2obj (leveldboptshash, path) {
+    var dbcreationoptions = leveldboptshash.dbcreationoptions || {};
+    leveldblib.encodingMakeup(dbcreationoptions, path);
     return {
       dbname: Path.join(path, leveldboptshash.dbname),
       listenable: true,
       dbcreationoptions: {
-        valueEncoding: encodingFor(leveldboptshash.dbcreationoptions, path)
+        //valueEncoding: encodingFor(leveldboptshash.dbcreationoptions, path)
+        valueEncoding: dbcreationoptions.valueEncoding || 'json'
       }
     }
   }
