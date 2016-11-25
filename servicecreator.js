@@ -111,7 +111,7 @@ function createLevelDBWithLogService(execlib, ParentService, leveldblib, bufferl
     this.resets = leveldblib.createDBHandler({
       dbname: Path.join(this.dbdirpath, 'resets.db'),
       dbcreationoptions: {
-        valueEncoding: bufferlib.makeCodec(['String', 'UInt64LE', 'UInt64LE', 'UInt32LE'], 'resets')
+        valueEncoding: bufferlib.makeCodec(['String', 'UInt48LE', 'UInt48LE', 'UInt32LE'], 'resets')
         //username, minmoment, maxmoment, txncount
       }
     });
