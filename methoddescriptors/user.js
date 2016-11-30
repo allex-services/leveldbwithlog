@@ -28,6 +28,10 @@ module.exports = {
     title: 'Key',
     anyOf: [{type:'string'},{type:'number'},{type:'integer'}]
   }],
+  traverseLog: [{
+    title: 'Traverse options',
+    type: 'object'
+  }],
   traverseResets: [{
     title: 'Traverse options',
     type: 'object'

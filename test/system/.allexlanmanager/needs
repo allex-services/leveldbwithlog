@@ -1,0 +1,9 @@
+[
+  {
+    "modulename": "allex_leveldbwithlogservice",
+    "instancename": "LDBWLog",
+    "propertyhash": {
+      "path": "ldbwlog.db"
+    }
+  }
+]

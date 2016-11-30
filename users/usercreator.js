@@ -37,10 +37,13 @@ function createUser(execlib, ParentUser, leveldblib) {
 
   function User(prophash) {
     ParentUser.call(this, prophash);
+    leveldblib.ServiceUserMixin.call(this);
   }
   
   ParentUser.inherit(User, require('../methoddescriptors/user'), [/*visible state fields here*/]/*or a ctor for StateStream filter*/);
+  leveldblib.ServiceUserMixin.addMethods(User);
   User.prototype.__cleanUp = function () {
+    leveldblib.ServiceUserMixin.prototype.__cleanUp.call(this);
     ParentUser.prototype.__cleanUp.call(this);
   };
 
@@ -63,6 +66,10 @@ function createUser(execlib, ParentUser, leveldblib) {
   User.prototype.del = function(key,defer){
     qlib.promise2defer(this.__service.del(key), defer);
   }
+
+  User.prototype.traverseLog = function (options, defer) {
+    this.streamLevelDB(this.__service.log, options, defer);
+  };
 
   User.prototype.traverseResets = function (options, defer) {
     this.streamLevelDB(this.__service.resets, options, defer);
