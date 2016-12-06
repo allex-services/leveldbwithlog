@@ -67,6 +67,10 @@ function createUser(execlib, ParentUser, leveldblib) {
     qlib.promise2defer(this.__service.del(key), defer);
   }
 
+  User.prototype.traverseKVStorage = function (options, defer) {
+    this.streamLevelDB(this.__service.kvstorage, options, defer);
+  };
+
   User.prototype.traverseLog = function (options, defer) {
     this.streamLevelDB(this.__service.log, options, defer);
   };

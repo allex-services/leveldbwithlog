@@ -28,6 +28,10 @@ module.exports = {
     title: 'Key',
     anyOf: [{type:'string'},{type:'number'},{type:'integer'}]
   }],
+  traverseKVStorage: [{
+    title: 'Traverse options',
+    type: 'object'
+  }],
   traverseLog: [{
     title: 'Traverse options',
     type: 'object'
