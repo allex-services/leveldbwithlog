@@ -15,6 +15,7 @@ function createLevelDBWithLogService(execlib, ParentService, LevelDBWithLog, lev
 
   function LevelDBWithLogService(prophash) {
     ParentService.call(this, prophash);
+    prophash.starteddefer = this.readyToAcceptUsersDefer;
     LevelDBWithLog.call(this, prophash);
   }
   
@@ -28,10 +29,6 @@ function createLevelDBWithLogService(execlib, ParentService, LevelDBWithLog, lev
   
   LevelDBWithLogService.prototype.isInitiallyReady = function () {
     return false;
-  };
-
-  LevelDBWithLogService.prototype.onDBsReady = function (dbpath) {
-    this.readyToAcceptUsersDefer.resolve(true);
   };
 
   LevelDBWithLogService.prototype.propertyHashDescriptor = {
