@@ -4,7 +4,8 @@ function createUser(execlib, ParentUser, leveldblib) {
     q = lib.q,
     qlib = lib.qlib,
     execSuite = execlib.execSuite,
-    HookableUserSessionMixin = leveldblib.HookableUserSessionMixin;
+    HookableUserSessionMixin = leveldblib.HookableUserSessionMixin,
+    _husmmd = HookableUserSessionMixin.__methodDescriptors;
 
   if (!ParentUser) {
     ParentUser = execlib.execSuite.ServicePack.Service.prototype.userFactory.get('user');
@@ -19,18 +20,39 @@ function createUser(execlib, ParentUser, leveldblib) {
   lib.inherit(KVStorageChannel, Channel);
   KVStorageChannel.prototype.name = 'l';
 
+  function LogStorageChannel (usersession){
+    Channel.call(this, usersession);
+  }
+  lib.inherit(LogStorageChannel, Channel);
+  LogStorageChannel.prototype.name = 'g';
+
   function KVStorageSession (user, session, gate) {
     UserSession.call(this, user, session, gate);
     HookableUserSessionMixin.call(this, this.user.__service.kvstorage);
+    this.logHook = new leveldblib.Hook({leveldb: this.user.__service.log, cb:this.onLogChanged.bind(this)});
     this.addChannel(KVStorageChannel);
+    this.addChannel(LogStorageChannel);
   }
 
-  UserSession.inherit(KVStorageSession, HookableUserSessionMixin.__methodDescriptors);
+  UserSession.inherit(KVStorageSession, lib.extend({}, _husmmd, {hookTolog: _husmmd.hook, unhookFromLog: _husmmd.unhook}));
   HookableUserSessionMixin.addMethods(KVStorageSession);
 
   KVStorageSession.prototype.__cleanUp = function () {
+    if (this.logHook) {
+      this.logHook.destroy();
+    }
+    this.logHook = null;
     HookableUserSessionMixin.prototype.destroy.call(this);
     UserSession.prototype.__cleanUp.call(this);
+  };
+
+  KVStorageSession.prototype.hookTolog = function (hookobj, defer) {
+    console.log('hook2log', hookobj, defer);
+    this.logHook.hook(hookobj, defer);
+  };
+
+  KVStorageSession.prototype.onLogChanged = function (logkey, logvalue) {
+    this.sendOOB('g', [logkey, logvalue]);
   };
 
   KVStorageSession.Channel = KVStorageChannel;

@@ -16,7 +16,11 @@ function go (taskobj) {
   }
   p2c = taskobj.execlib.lib.qlib.promise2console;
   sinkcall = taskobj.sink.call.bind(taskobj.sink);
-  p2c(taskobj.sink.call('put', 'param1', 1), 'put').then(
+  taskobj.sink.consumeChannel('l', console.log.bind(console, 'hook'));
+  taskobj.sink.sessionCall('hook', {keys: ['***'], scan: true});
+  taskobj.sink.consumeChannel('g', console.log.bind(console, 'log hook'));
+  taskobj.sink.sessionCall('hookTolog', {keys: ['***'], scan: true});
+  p2c(taskobj.sink.call('put', 'param1', Math.floor(Math.random()*10)), 'put').then(
     p2c.bind(null, sinkcall('get', 'param1'), 'get')
   ).then(
     traverser.bind(null, taskobj)
