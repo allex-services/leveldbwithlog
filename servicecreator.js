@@ -1,15 +1,16 @@
-function createLevelDBWithLogService(execlib, ParentService, LevelDBWithLog, leveldblib) {
+function createLevelDBWithLogService(execlib, ParentService, leveldbwithloglib, leveldblib) {
   'use strict';
   
   var lib = execlib.lib,
     q = lib.q,
-    qlib = lib.qlib;
+    qlib = lib.qlib,
+    LevelDBWithLog = leveldbwithloglib.LevelDBWithLog;
 
 
   function factoryCreator(parentFactory) {
     return {
       'service': require('./users/serviceusercreator')(execlib, parentFactory.get('service')),
-      'user': require('./users/usercreator')(execlib, parentFactory.get('user'), leveldblib) 
+      'user': require('./users/usercreator')(execlib, parentFactory.get('user'), leveldblib, leveldbwithloglib) 
     };
   }
 

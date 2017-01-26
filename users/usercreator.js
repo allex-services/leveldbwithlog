@@ -1,10 +1,11 @@
-function createUser(execlib, ParentUser, leveldblib) {
+function createUser(execlib, ParentUser, leveldblib, leveldbwithloglib) {
   'use strict';
   var lib = execlib.lib,
     q = lib.q,
     qlib = lib.qlib,
     execSuite = execlib.execSuite,
     HookableUserSessionMixin = leveldblib.HookableUserSessionMixin,
+    HookToLogMixin = leveldbwithloglib.HookMixin,
     _husmmd = HookableUserSessionMixin.__methodDescriptors;
 
   if (!ParentUser) {
@@ -29,13 +30,14 @@ function createUser(execlib, ParentUser, leveldblib) {
   function KVStorageSession (user, session, gate) {
     UserSession.call(this, user, session, gate);
     HookableUserSessionMixin.call(this, this.user.__service.kvstorage);
-    this.logHook = new leveldblib.Hook({leveldb: this.user.__service.log, cb:this.onLogChanged.bind(this)});
+    HookToLogMixin.call(this, this.user.__service.log);
     this.addChannel(KVStorageChannel);
     this.addChannel(LogStorageChannel);
   }
 
-  UserSession.inherit(KVStorageSession, lib.extend({}, _husmmd, {hookTolog: _husmmd.hook, unhookFromLog: _husmmd.unhook}));
+  UserSession.inherit(KVStorageSession, lib.extend({}, _husmmd, {hookToLog: _husmmd.hook, unhookFromLog: _husmmd.unhook}));
   HookableUserSessionMixin.addMethods(KVStorageSession);
+  HookToLogMixin.addMethods(KVStorageSession);
 
   KVStorageSession.prototype.__cleanUp = function () {
     if (this.logHook) {
@@ -44,11 +46,6 @@ function createUser(execlib, ParentUser, leveldblib) {
     this.logHook = null;
     HookableUserSessionMixin.prototype.destroy.call(this);
     UserSession.prototype.__cleanUp.call(this);
-  };
-
-  KVStorageSession.prototype.hookTolog = function (hookobj, defer) {
-    console.log('hook2log', hookobj, defer);
-    this.logHook.hook(hookobj, defer);
   };
 
   KVStorageSession.prototype.onLogChanged = function (logkey, logvalue) {
