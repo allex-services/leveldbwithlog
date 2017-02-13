@@ -4,55 +4,42 @@ function createUser(execlib, ParentUser, leveldblib, leveldbwithloglib) {
     q = lib.q,
     qlib = lib.qlib,
     execSuite = execlib.execSuite,
-    HookableUserSessionMixin = leveldblib.HookableUserSessionMixin,
-    HookToLogMixin = leveldbwithloglib.HookMixin,
-    _husmmd = HookableUserSessionMixin.__methodDescriptors;
+    QuerableUserSessionMixin = leveldblib.QuerableUserSessionMixin;
 
   if (!ParentUser) {
     ParentUser = execlib.execSuite.ServicePack.Service.prototype.userFactory.get('user');
   }
 
-  var UserSession = ParentUser.prototype.getSessionCtor('.'),
-    Channel = UserSession.Channel;
-
-  function KVStorageChannel (usersession){
-    Channel.call(this, usersession);
-  }
-  lib.inherit(KVStorageChannel, Channel);
-  KVStorageChannel.prototype.name = 'l';
-
-  function LogStorageChannel (usersession){
-    Channel.call(this, usersession);
-  }
-  lib.inherit(LogStorageChannel, Channel);
-  LogStorageChannel.prototype.name = 'g';
+  var UserSession = ParentUser.prototype.getSessionCtor('.');
 
   function KVStorageSession (user, session, gate) {
     UserSession.call(this, user, session, gate);
-    HookableUserSessionMixin.call(this, this.user.__service.kvstorage);
-    HookToLogMixin.call(this, this.user.__service.log);
-    this.addChannel(KVStorageChannel);
-    this.addChannel(LogStorageChannel);
+    QuerableUserSessionMixin.call(this, this.user.__service.kvstorage);
   }
 
-  UserSession.inherit(KVStorageSession, lib.extend({}, _husmmd, {hookToLog: _husmmd.hook, unhookFromLog: _husmmd.unhook}));
-  HookableUserSessionMixin.addMethods(KVStorageSession);
-  HookToLogMixin.addMethods(KVStorageSession);
+  UserSession.inherit(KVStorageSession, lib.extend(
+    {},
+    {
+      query: QuerableUserSessionMixin.queryMethodParamDescriptor,
+      queryLog: QuerableUserSessionMixin.queryMethodParamDescriptor
+    },
+    QuerableUserSessionMixin.stopQueryMethodDescriptor
+  ));
+  QuerableUserSessionMixin.addMethods(KVStorageSession);
 
   KVStorageSession.prototype.__cleanUp = function () {
-    if (this.logHook) {
-      this.logHook.destroy();
-    }
-    this.logHook = null;
-    HookableUserSessionMixin.prototype.destroy.call(this);
     UserSession.prototype.__cleanUp.call(this);
   };
 
-  KVStorageSession.prototype.onLogChanged = function (logkey, logvalue) {
-    this.sendOOB('g', [logkey, logvalue]);
-  };
+  function service2kvstorage (service) {
+    return service.kvstorage;
+  }
+  function service2log (service) {
+    return service.log;
+  }
+  KVStorageSession.prototype.query = QuerableUserSessionMixin.queryMethodGenerator(service2kvstorage, 'query');
+  KVStorageSession.prototype.queryLog = QuerableUserSessionMixin.queryMethodGenerator(service2log, 'query');
 
-  KVStorageSession.Channel = KVStorageChannel;
 
   function User(prophash) {
     ParentUser.call(this, prophash);

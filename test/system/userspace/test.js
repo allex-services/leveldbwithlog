@@ -1,3 +1,14 @@
+function doQuery(taskobj, methodname, filters) {
+  taskobj.taskRegistry.run('queryLevelDB', {
+    queryMethodName: methodname,
+    sink: taskobj.sink,
+    scanInitially: true,
+    filter: filters,
+    onPut: console.log.bind(console, 'qput'),
+    onDel: console.log.bind(console, 'qdel')
+  });
+}
+
 function traverser (taskobj) {
   var leveldblib;
   if (!(taskobj && taskobj.sink)) {
@@ -16,10 +27,8 @@ function go (taskobj) {
   }
   p2c = taskobj.execlib.lib.qlib.promise2console;
   sinkcall = taskobj.sink.call.bind(taskobj.sink);
-  taskobj.sink.consumeChannel('l', console.log.bind(console, 'hook'));
-  taskobj.sink.sessionCall('hook', {keys: ['***'], scan: true});
-  taskobj.sink.consumeChannel('g', console.log.bind(console, 'log hook'));
-  taskobj.sink.sessionCall('hookToLog', {keys: ['***'], scan: true});
+  doQuery(taskobj, 'query', {});
+  doQuery(taskobj, 'queryLog', {});
   p2c(taskobj.sink.call('put', 'param1', Math.floor(Math.random()*10)), 'put').then(
     p2c.bind(null, sinkcall('get', 'param1'), 'get')
   ).then(
