@@ -34,7 +34,8 @@ function createLevelDBWithLogService(execlib, ParentService, leveldbwithloglib, 
 
   LevelDBWithLogService.prototype.propertyHashDescriptor = {
     path: {
-      type: 'string'
+      type: ['string', 'array'],
+      items: {type: 'string'}
     }
   };
   
